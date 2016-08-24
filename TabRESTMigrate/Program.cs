@@ -13,20 +13,38 @@ namespace OnlineContentDownloader
         [STAThread]
         static void Main()
         {
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-
-            //UI form we are going to show
-            var form = new FormSiteExportImport();
-
             //See if we have command line arguments to run
             var commandLine = new CommandLineParser();
-            if(CommandLineParser.HasUseableCommandLine(commandLine))
+            if (CommandLineParser.HasUseableCommandLine(commandLine))
             {
-                form.SetStartupCommandLine(commandLine);
+                StartupCommandLine(commandLine);
+            }
+            else
+            {
+                //UI form we are going to show
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
+                var form = new FormSiteExportImport();
+
+                Application.Run(form);
+            }
+        }
+
+        static void StartupCommandLine(CommandLineParser commandLine)
+        {
+            TaskMaster task = null;
+            //Parse the details from the command line
+            try
+            {
+                task = TaskMaster.FromCommandLine(commandLine);
+            }
+            catch (Exception exParseCommandLine)
+            {
+                Console.WriteLine( "Error parsing command line: " + exParseCommandLine);
             }
 
-            Application.Run(form);
+            task.ExecuteTaskBegin();
         }
     }
+
 }
