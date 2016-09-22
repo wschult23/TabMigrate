@@ -9,6 +9,13 @@ using System.IO;
 /// </summary>
 abstract class TableauServerRequestBase
 {
+
+    static TableauServerRequestBase()
+    {
+        ServicePointManager.ServerCertificateValidationCallback +=
+            (sender, cert, chain, sslPolicyErrors) => true;
+    }
+    
     /// <summary>
     /// Sends the body text up to the server
     /// </summary>
