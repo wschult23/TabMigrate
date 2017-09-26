@@ -67,6 +67,30 @@ internal partial class TaskMaster
     private IEnumerable<SiteProject> _downloadedList_Projects;
 
 
+    /// <summary>
+    /// If we took an  inventory of the list of subscriptions this will contain the list
+    /// </summary>
+    public IEnumerable<SiteSubscription> SubscriptionsList
+    {
+        get
+        {
+            return _downloadedList_Subscriptions;
+        }
+    }
+    private IEnumerable<SiteSubscription> _downloadedList_Subscriptions;
+
+    /// <summary>
+    /// If we took an  inventory of the list of subscriptions this will contain the list
+    /// </summary>
+    public IEnumerable<SiteView> ViewsList
+    {
+        get
+        {
+            return _downloadedList_Views;
+        }
+    }
+    private IEnumerable<SiteView> _downloadedList_Views;
+
 
     /// <summary>
     /// If we took an inventory of groups, return them
@@ -92,6 +116,31 @@ internal partial class TaskMaster
     }
     private IEnumerable<SiteDatasource> _downloadedList_Datasources;
 
+
+    /// <summary>
+    /// If we downloaded the list of schedules, it will be here
+    /// </summary>
+    public IEnumerable<SiteSchedule> SchedulesList
+    {
+        get
+        {
+            return _downloadedList_Schedules;
+        }
+    }
+    private IEnumerable<SiteSchedule> _downloadedList_Schedules;
+
+
+    /// <summary>
+    /// If we downloaded the set of extract refresh tasks, it will be here
+    /// </summary>
+    public IEnumerable<SiteTaskExtractRefresh> TasksExtractRefreshesList
+    {
+        get
+        {
+            return _downloadedList_ExtractRefreshTasks;
+        }
+    }
+    private IEnumerable<SiteTaskExtractRefresh> _downloadedList_ExtractRefreshTasks;
 
     /// <summary>
     /// If we downloaded the list of workbooks, it will be here
@@ -288,16 +337,26 @@ internal partial class TaskMaster
     }
 
     /// <summary>
-    /// Download the data sources
+    /// 
     /// </summary>
     /// <param name="onlineLogin"></param>
+    /// <param name="exportToPath"></param>
+    /// <param name="projectsList"></param>
+    /// <param name="singleProjectIdFilter"></param>
+    /// <param name="exportOnlyWithThisTag"></param>
+    /// <param name="deleteTagAfterExport"></param>
+    /// <param name="generateInfoFile">TRUE: Each downloaded workbook will get an information file generated that has additional metadata about it</param>
+    /// <param name="siteUsers"> If not NULL, then this will get used to look the user name for each downloaded workbook, and safe it into the info file</param>
     private void Execute_DownloadDatasources(
         TableauServerSignIn onlineLogin, 
         string exportToPath, 
         IProjectsList projectsList,
         SiteProject singleProjectIdFilter = null,
-        string exportOnlyWithThisTag = null,
-        bool deleteTagAfterExport = false)
+        string exportOnlyWithThisTag      = null,
+        bool deleteTagAfterExport         = false,
+        bool generateInfoFile             = false,
+        IEnumerable<SiteUser>   siteUsers = null
+        )
     {
         _statusLog.AddStatusHeader("Download datasources");
         ICollection<SiteDatasource> datasourcesList = null;
@@ -346,6 +405,12 @@ internal partial class TaskMaster
         //-----------------------------------------------------------
         //Download the data sources
         //-----------------------------------------------------------
+        //If we are going to write out metadata for each download, then create the object that lets us look up the owner of each workbook
+        KeyedLookup<SiteUser> contentOwnerLookup = null;
+        if ((generateInfoFile) && (siteUsers != null))
+        {
+            contentOwnerLookup = new KeyedLookup<SiteUser>(siteUsers, _statusLog);
+        }
         try
         {
             var datasourceDownloads = new DownloadDatasources(
@@ -353,7 +418,9 @@ internal partial class TaskMaster
                 onlineLogin,
                 filteredList, 
                 datasourcePath,
-                projectsList);
+                projectsList,
+                generateInfoFile,
+                contentOwnerLookup);
             successfullExportSet = datasourceDownloads.ExecuteRequest();
         }
         catch (Exception exDatasourceDownload)
@@ -373,7 +440,7 @@ internal partial class TaskMaster
 
 
     /// <summary>
-    /// Download the data sources
+    /// Download the data sources list
     /// </summary>
     /// <param name="onlineLogin"></param>
     private void Execute_DownloadDatasourcesList(TableauServerSignIn onlineLogin)
@@ -381,7 +448,7 @@ internal partial class TaskMaster
         _statusLog.AddStatusHeader("Download datasources list");
         try
         {
-            //Get the list of workbooks
+            //Get the list of datasources
             var datasources = new DownloadDatasourcesList(_onlineUrls, onlineLogin);
             datasources.ExecuteRequest();
 
@@ -392,6 +459,74 @@ internal partial class TaskMaster
         {
             _statusLog.AddError("Error during datasource list download, " + exDatasourceDownload.ToString());
         }
+    }
+
+    /// <summary>
+    /// Download the schedules list
+    /// </summary>
+    /// <param name="onlineLogin"></param>
+    private IEnumerable<SiteSchedule> Execute_DownloadSchedulesList(TableauServerSignIn onlineLogin)
+    {
+        _statusLog.AddStatusHeader("Download schedules list");
+        try
+        {
+            //Get the list of schedules
+            var schedules = new DownloadSchedulesList(_onlineUrls, onlineLogin);
+            schedules.ExecuteRequest();
+
+            //Store them in our object
+            var siteSchedules = schedules.Schedules;
+            _downloadedList_Schedules = siteSchedules;
+            return siteSchedules;
+        }
+        catch (Exception exDownload)
+        {
+            _statusLog.AddError("Error during schedules list download, " + exDownload.ToString());
+            return null;
+        }
+    }
+
+
+    /// <summary>
+    /// Download the list of tasks for the specified schedules
+    /// </summary>
+    /// <param name="serverLogin"></param>
+    /// <param name="enumerable"></param>
+    private void Execute_DownloadExtractTasksList(
+        TableauServerSignIn serverLogin, 
+        IEnumerable<SiteSchedule> schedules)
+    {
+        _statusLog.AddStatusHeader("Download extract refresh tasks list");
+
+        //Missing schedules set? Something is wrong...
+        if (schedules == null)
+        {
+            this.StatusLog.AddError("NULL set of schedules");
+            return;
+        }
+
+        var extractRefreshTasks = new List<SiteTaskExtractRefresh>();
+
+        //For each schedule, download its list of extract refresh tasks
+        foreach(var thisSchedule in schedules)
+        {
+            try
+            {
+                var tasksDownloader = new DownloadTasksExtractRefreshesList(_onlineUrls, serverLogin, thisSchedule.Id);
+                tasksDownloader.ExecuteRequest();
+
+                //Add the tasks to the set
+                extractRefreshTasks.AddRange(tasksDownloader.Tasks);
+            }
+            catch(Exception exDownload)
+            {
+                _statusLog.AddError("Error during extract refresh tasks download, " + exDownload.ToString());
+            }
+        }
+
+        //Store the set of extract refresh tasks
+        _downloadedList_ExtractRefreshTasks = extractRefreshTasks;
+
     }
 
     /// <summary>
@@ -509,13 +644,18 @@ internal partial class TaskMaster
     /// <param name="singleProjectIdFilter">if specified, export only from a single project</param>
     /// <param name="exportOnlyWithThisTag">if specified, export only content with this tag</param>
     /// <param name="deleteTagAfterExport">TRUE: Remove the server-side tag from exported content (only valid if we have an export tag)</param>
+    /// <param name="generateInfoFile">TRUE: Each downloaded workbook will get an information file generated that has additional metadata about it</param>
+    /// <param name="siteUsers"> If not NULL, then this will get used to look the user name for each downloaded workbook, and safe it into the info file</param>
     private void Execute_DownloadWorkbooks(
         TableauServerSignIn onlineLogin, 
         string exportToPath, 
         IProjectsList projectsList,
         SiteProject singleProjectIdFilter = null,
-        string exportOnlyWithThisTag = null,
-        bool deleteTagAfterExport = false)
+        string exportOnlyWithThisTag      = null,
+        bool deleteTagAfterExport         = false,
+        bool generateInfoFile             = false,
+        IEnumerable<SiteUser> siteUsers   = null
+        )
     {
         var onlineUrls = _onlineUrls;
         _statusLog.AddStatusHeader("Download workbooks");
@@ -574,9 +714,25 @@ internal partial class TaskMaster
         var workbookPath = Path.Combine(exportToPath, "workbooks");
         ICollection<SiteWorkbook> successfullExportSet = null;
         FileIOHelper.CreatePathIfNeeded(workbookPath);
+
+        //If we are going to write out metadata for each download, then create the object that lets us look up the owner of each workbook
+        KeyedLookup<SiteUser> workbookOwnerLookup = null;
+        if ((generateInfoFile) && (siteUsers != null))
+        {
+            workbookOwnerLookup = new KeyedLookup<SiteUser>(siteUsers, _statusLog);
+        }
+        //Do the downloads......
         try
         {
-            var workbookDownloads = new DownloadWorkbooks(onlineUrls, onlineLogin, filteredList, workbookPath, projectsList);
+            //Create the workbooks downloader
+            var workbookDownloads = new DownloadWorkbooks(
+                onlineUrls, 
+                onlineLogin, 
+                filteredList, 
+                workbookPath, 
+                projectsList, 
+                generateInfoFile,
+                workbookOwnerLookup);
             successfullExportSet = workbookDownloads.ExecuteRequest();
         }
         catch (Exception exWorkbooksDownload)
@@ -762,10 +918,19 @@ internal partial class TaskMaster
             Execute_CreateProjectWithName(serverLogin, createProjectName);
         }
 
+        //===================================================================================
+        //Views
+        //===================================================================================
+        if (taskOptions.IsOptionSet(TaskMasterOptions.Option_GetViewsList))
+        {
+            var viewsList = Execute_DownloadViewsList(serverLogin);
+        }
+
         //========================================================================================
         //Attempt to get the list of users
         //========================================================================================
-        if (taskOptions.IsOptionSet(TaskMasterOptions.Option_GetSiteUsers))
+        if ((taskOptions.IsOptionSet(TaskMasterOptions.Option_GetSiteUsers)) 
+            || (taskOptions.IsOptionSet(TaskMasterOptions.Option_AssignContentOwnershipAfterPublish))) //If we do content remapping, we need the users list
         {
             _downloadedList_Users = Execute_DownloadSiteUsers(serverLogin);
         }
@@ -802,7 +967,14 @@ internal partial class TaskMaster
             exportSingleProject = helper_DetermineIfSingleProjectFilter(projectsList);
         }
 
-        
+        //===================================================================================
+        //Subscriptions
+        //===================================================================================
+        if (taskOptions.IsOptionSet(TaskMasterOptions.Option_GetSubscriptionsList))
+        {
+            var subscriptionsList = Execute_DownloadSubscriptionsList(serverLogin);
+        }
+
         //===================================================================================
         //List of groups? 
         //===================================================================================
@@ -820,6 +992,23 @@ internal partial class TaskMaster
         }
 
         //===================================================================================
+        //List of schedules? 
+        //===================================================================================
+        if ((taskOptions.IsOptionSet(TaskMasterOptions.Option_GetSchedulesList))
+            || (taskOptions.IsOptionSet(TaskMasterOptions.Option_GetExtractTasksList)))
+        {
+            var schedules  = Execute_DownloadSchedulesList(serverLogin);
+
+            //See if we should download the list of extract refresh tasks
+            if (taskOptions.IsOptionSet(TaskMasterOptions.Option_GetExtractTasksList))
+            {
+                Execute_DownloadExtractTasksList(
+                    serverLogin, 
+                    SiteSchedule.FilterListToExtractSchedules(schedules));
+            }
+        }
+
+        //===================================================================================
         //Datasources download...
         //===================================================================================
         if (taskOptions.IsOptionSet(TaskMasterOptions.Option_DownloadDatasources))
@@ -831,6 +1020,8 @@ internal partial class TaskMaster
                 ,exportSingleProject
                 ,taskOptions.GetOptionValue(TaskMasterOptions.OptionParameter_ExportOnlyTaggedWith)
                 ,taskOptions.IsOptionSet(TaskMasterOptions.OptionParameter_RemoveTagFromExportedContent)
+                ,taskOptions.IsOptionSet(TaskMasterOptions.OptionParameter_GenerateInfoFilesForDownloadedContent)
+                ,_downloadedList_Users
                 ); 
         }
 
@@ -847,6 +1038,8 @@ internal partial class TaskMaster
                 ,exportSingleProject
                 ,taskOptions.GetOptionValue(TaskMasterOptions.OptionParameter_ExportOnlyTaggedWith)
                 ,taskOptions.IsOptionSet(TaskMasterOptions.OptionParameter_RemoveTagFromExportedContent)
+                ,taskOptions.IsOptionSet(TaskMasterOptions.OptionParameter_GenerateInfoFilesForDownloadedContent)
+                ,_downloadedList_Users
                 );
         }
 
@@ -885,7 +1078,9 @@ internal partial class TaskMaster
             Execute_UploadDatasources(
                 serverLogin, 
                 taskOptions.GetOptionValue(TaskMasterOptions.OptionParameter_PathUploadFrom),
-                uploadCredentialManager);
+                uploadCredentialManager,
+                taskOptions.IsOptionSet(TaskMasterOptions.Option_AssignContentOwnershipAfterPublish),
+                _downloadedList_Users);
         }
 
         //===================================================================================
@@ -897,7 +1092,9 @@ internal partial class TaskMaster
                 serverLogin,
                 taskOptions.GetOptionValue(TaskMasterOptions.OptionParameter_PathUploadFrom), 
                 taskOptions.IsOptionSet(TaskMasterOptions.Option_RemapWorkbookReferencesOnUpload),
-                uploadCredentialManager);
+                uploadCredentialManager,
+                taskOptions.IsOptionSet(TaskMasterOptions.Option_AssignContentOwnershipAfterPublish),
+                _downloadedList_Users);
         }
 
         //===================================================================================
@@ -955,6 +1152,7 @@ internal partial class TaskMaster
         _statusLog.AddStatusHeader("Sign out");
         serverLogin.SignOut(onlineUrls);
     }
+
 
 
     /// <summary>
@@ -1081,7 +1279,7 @@ internal partial class TaskMaster
             var twbGenerateFromTemplate = new TwbReplaceCSVReference(
                 PathHelper.GetInventoryTwbTemplatePath(),   //*.twb we are using as our template
                 pathTwbOut,                                 //Output *.twb we are generating
-                "siteInventory",                            //Datasource name in tempalte workbook
+                "siteInventoryTemplate.csv",                //Datasource filename in tempalte workbook
                 pathReportCsv,                              //CSV file we want to associate with the datasource above
                 _statusLog);
 
@@ -1119,8 +1317,12 @@ internal partial class TaskMaster
                 this.ProjectsList,
                 this.DatasourcesList,
                 this.WorkbooksList,
+                this.ViewsList,
                 this.UsersList,
                 this.GroupsList,
+                this.SubscriptionsList,
+                this.SchedulesList,
+                this.TasksExtractRefreshesList,
                 _statusLog);
 
             reportGenerator.GenerateCSVFile(pathReport);
@@ -1169,6 +1371,74 @@ internal partial class TaskMaster
     }
 
     /// <summary>
+    /// Downloads the set of subscriptions in the site
+    /// </summary>
+    /// <param name="onlineLogin"></param>
+    /// <returns></returns>
+    private DownloadSubscriptionsList Execute_DownloadSubscriptionsList(TableauServerSignIn onlineLogin)
+    {
+        var onlineUrls = _onlineUrls;
+        _statusLog.AddStatusHeader("Request site subscriptions");
+        DownloadSubscriptionsList subscriptions = null;
+        //===================================================================================
+        //Subscriptions...
+        //===================================================================================
+        try
+        {
+            subscriptions = new DownloadSubscriptionsList(onlineUrls, onlineLogin);
+            subscriptions.ExecuteRequest();
+
+            //List all the subscriptions
+            foreach (var singleSubscription in subscriptions.Subscriptions)
+            {
+                _statusLog.AddStatus(singleSubscription.ToString());
+            }
+        }
+        catch (Exception ex)
+        {
+            _statusLog.AddError("Error during subscriptions query, " + ex.ToString());
+        }
+
+        //Store it
+        _downloadedList_Subscriptions = subscriptions.Subscriptions;
+        return subscriptions;
+    }
+
+    /// <summary>
+    /// Downloads the set of views in the site
+    /// </summary>
+    /// <param name="onlineLogin"></param>
+    /// <returns></returns>
+    private DownloadViewsList Execute_DownloadViewsList(TableauServerSignIn onlineLogin)
+    {
+        var onlineUrls = _onlineUrls;
+        _statusLog.AddStatusHeader("Request site views");
+        DownloadViewsList siteViews = null;
+        //===================================================================================
+        //Views...
+        //===================================================================================
+        try
+        {
+            siteViews = new DownloadViewsList(onlineUrls, onlineLogin);
+            siteViews.ExecuteRequest();
+
+            //List all the subscriptions
+            foreach (var singleView in siteViews.Views)
+            {
+                _statusLog.AddStatus(singleView.ToString());
+            }
+        }
+        catch (Exception ex)
+        {
+            _statusLog.AddError("Error during views query, " + ex.ToString());
+        }
+
+        //Store it
+        _downloadedList_Views = siteViews.Views;
+        return siteViews;
+    }
+
+    /// <summary>
     /// Downloads the set of groups in the site
     /// </summary>
     /// <param name="onlineLogin"></param>
@@ -1211,7 +1481,9 @@ internal partial class TaskMaster
     private void Execute_UploadDatasources(
         TableauServerSignIn onlineLogin, 
         string localBasePath,
-        CredentialManager credentialManager)
+        CredentialManager credentialManager,
+        bool attemptContentOwnershipAssignment,
+        IEnumerable<SiteUser> siteUsers)
     {
         StatusLog.AddStatusHeader("Upload datasources");
 
@@ -1241,6 +1513,8 @@ internal partial class TaskMaster
             pathDataSources, 
             uploadProjectBehavior, 
             _manualActions,
+            attemptContentOwnershipAssignment,
+            siteUsers,
             this.UploadChunksSizeBytes,
             this.UploadChunksDelaySeconds);
         try
@@ -1290,19 +1564,23 @@ internal partial class TaskMaster
         }
     }
 
-    
+
     /// <summary>
     /// Called to perform Uploads of the workbooks
     /// </summary>
     /// <param name="onlineLogin"></param>
     /// <param name="localBasePath"></param>
     /// <param name="remapWorkbookReferences">TRUE is we want to transform workbooks to remap any published datasources to the new server/site we are uploading to</param>
+    /// <param name="attemptContentOwnershipAssignment">TRUE: Look for content metadata files, and attempt to assign the owner to the published content</param>
     /// <param name="credentialManager">Database credentials to associate with content we are uploading</param>
+    /// <param name="siteUsers">Users in site, needed for content ownership remapping</param>
     private void Execute_UploadWorkbooks(
         TableauServerSignIn onlineLogin, 
         string localBasePath, 
         bool remapWorkbookReferences, 
-        CredentialManager credentialManager)
+        CredentialManager credentialManager,
+        bool attemptContentOwnershipAssignment,
+        IEnumerable<SiteUser> siteUsers)
     {
         StatusLog.AddStatusHeader("Upload workbooks");
 
@@ -1341,8 +1619,11 @@ internal partial class TaskMaster
             pathRemappingTempspace, 
             uploadProjectBehavior, 
             _manualActions,
+            attemptContentOwnershipAssignment,
+            siteUsers,
             this.UploadChunksSizeBytes,
-            this.UploadChunksDelaySeconds);
+            this.UploadChunksDelaySeconds
+            );
         try
         {
             dsUploader.ExecuteRequest();

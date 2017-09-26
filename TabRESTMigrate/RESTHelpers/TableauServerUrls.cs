@@ -36,6 +36,10 @@ class TableauServerUrls : ITableauServerSiteInfo
     private readonly string _urlListWorkbookConnectionsTemplate;
     private readonly string _urlListDatasourcesTemplate;
     private readonly string _urlListProjectsTemplate;
+    private readonly string _urlListSubscriptionsTemplate;
+    private readonly string _urlListSchedulesTemplate;
+    private readonly string _urlListTasksInScheduleTemplate;
+    private readonly string _urlListViewsTemplate;
     private readonly string _urlListGroupsTemplate;
     private readonly string _urlListUsersTemplate;
     private readonly string _urlListUsersInGroupTemplate;
@@ -49,6 +53,8 @@ class TableauServerUrls : ITableauServerSiteInfo
     private readonly string _urlCreateProjectTemplate;
     private readonly string _urlDeleteWorkbookTagTemplate;
     private readonly string _urlDeleteDatasourceTagTemplate;
+    private readonly string _urlUpdateWorkbookTemplate;
+    private readonly string _urlUpdateDatasourceTemplate;
 
     /// <summary>
     /// Server url with protocol
@@ -83,25 +89,31 @@ class TableauServerUrls : ITableauServerSiteInfo
         this.SiteUrlSegement = siteUrlSegment;
         this.ServerName = serverName;
         this.ServerUrlWithProtocol                 = serverNameWithProtocol;
-        this.UrlLogin                              = serverNameWithProtocol + "/api/2.0/auth/signin";
-        this.UrlLogout                             = serverNameWithProtocol + "/api/2.0/auth/signout";
-        this._urlListWorkbooksForUserTemplate = serverNameWithProtocol + "/api/2.0/sites/{{iwsSiteId}}/users/{{iwsUserId}}/workbooks?pageSize={{iwsPageSize}}&pageNumber={{iwsPageNumber}}";
-        this._urlListWorkbookConnectionsTemplate   = serverNameWithProtocol + "/api/2.0/sites/{{iwsSiteId}}/workbooks/{{iwsWorkbookId}}/connections";
-        this._urlListDatasourcesTemplate           = serverNameWithProtocol + "/api/2.0/sites/{{iwsSiteId}}/datasources?pageSize={{iwsPageSize}}&pageNumber={{iwsPageNumber}}";
-        this._urlListProjectsTemplate              = serverNameWithProtocol + "/api/2.0/sites/{{iwsSiteId}}/projects?pageSize={{iwsPageSize}}&pageNumber={{iwsPageNumber}}";
-        this._urlListGroupsTemplate                = serverNameWithProtocol + "/api/2.0/sites/{{iwsSiteId}}/groups?pageSize={{iwsPageSize}}&pageNumber={{iwsPageNumber}}";
-        this._urlListUsersTemplate                 = serverNameWithProtocol + "/api/2.0/sites/{{iwsSiteId}}/users?pageSize={{iwsPageSize}}&pageNumber={{iwsPageNumber}}";
-        this._urlListUsersInGroupTemplate          = serverNameWithProtocol + "/api/2.0/sites/{{iwsSiteId}}/groups/{{iwsGroupId}}/users?pageSize={{iwsPageSize}}&pageNumber={{iwsPageNumber}}"; 
-        this._urlDownloadDatasourceTemplate        = serverNameWithProtocol + "/api/2.0/sites/{{iwsSiteId}}/datasources/{{iwsRepositoryId}}/content";
-        this._urlDownloadWorkbookTemplate          = serverNameWithProtocol + "/api/2.0/sites/{{iwsSiteId}}/workbooks/{{iwsRepositoryId}}/content";
-        this._urlSiteInfoTemplate                  = serverNameWithProtocol + "/api/2.0/sites/{{iwsSiteId}}";
-        this._urlInitiateUploadTemplate            = serverNameWithProtocol + "/api/2.0/sites/{{iwsSiteId}}/fileUploads";
-        this._urlAppendUploadChunkTemplate         = serverNameWithProtocol + "/api/2.0/sites/{{iwsSiteId}}/fileUploads/{{iwsUploadSession}}";
-        this._urlFinalizeUploadDatasourceTemplate  = serverNameWithProtocol + "/api/2.0/sites/{{iwsSiteId}}/datasources?uploadSessionId={{iwsUploadSession}}&datasourceType={{iwsDatasourceType}}&overwrite=true";
-        this._urlFinalizeUploadWorkbookTemplate    = serverNameWithProtocol + "/api/2.0/sites/{{iwsSiteId}}/workbooks?uploadSessionId={{iwsUploadSession}}&workbookType={{iwsWorkbookType}}&overwrite=true";
-        this._urlCreateProjectTemplate             = serverNameWithProtocol + "/api/2.0/sites/{{iwsSiteId}}/projects";
-        this._urlDeleteWorkbookTagTemplate         = serverNameWithProtocol + "/api/2.0/sites/{{iwsSiteId}}/workbooks/{{iwsWorkbookId}}/tags/{{iwsTagText}}";
-        this._urlDeleteDatasourceTagTemplate       = serverNameWithProtocol + "/api/2.0/sites/{{iwsSiteId}}/datasources/{{iwsDatasourceId}}/tags/{{iwsTagText}}";
+        this.UrlLogin                              = serverNameWithProtocol + "/api/2.3/auth/signin";
+        this.UrlLogout                             = serverNameWithProtocol + "/api/2.3/auth/signout";
+        this._urlListWorkbooksForUserTemplate      = serverNameWithProtocol + "/api/2.3/sites/{{iwsSiteId}}/users/{{iwsUserId}}/workbooks?pageSize={{iwsPageSize}}&pageNumber={{iwsPageNumber}}";
+        this._urlListWorkbookConnectionsTemplate   = serverNameWithProtocol + "/api/2.3/sites/{{iwsSiteId}}/workbooks/{{iwsWorkbookId}}/connections";
+        this._urlListDatasourcesTemplate           = serverNameWithProtocol + "/api/2.3/sites/{{iwsSiteId}}/datasources?pageSize={{iwsPageSize}}&pageNumber={{iwsPageNumber}}";
+        this._urlListProjectsTemplate              = serverNameWithProtocol + "/api/2.3/sites/{{iwsSiteId}}/projects?pageSize={{iwsPageSize}}&pageNumber={{iwsPageNumber}}";
+        this._urlListSubscriptionsTemplate         = serverNameWithProtocol + "/api/2.3/sites/{{iwsSiteId}}/subscriptions?pageSize={{iwsPageSize}}&pageNumber={{iwsPageNumber}}";
+        this._urlListSchedulesTemplate             = serverNameWithProtocol + "/api/2.3/schedules?pageSize={{iwsPageSize}}&pageNumber={{iwsPageNumber}}";
+        this._urlListTasksInScheduleTemplate       = serverNameWithProtocol + "/api/2.3/sites/{{iwsSiteId}}/schedules/{{iwsScheduleId}}/extracts?pageSize={{iwsPageSize}}&pageNumber={{iwsPageNumber}}";
+        this._urlListViewsTemplate                 = serverNameWithProtocol + "/api/2.3/sites/{{iwsSiteId}}/views?includeUsageStatistics=true&pageSize={{iwsPageSize}}&pageNumber={{iwsPageNumber}}";
+        this._urlListGroupsTemplate                = serverNameWithProtocol + "/api/2.3/sites/{{iwsSiteId}}/groups?pageSize={{iwsPageSize}}&pageNumber={{iwsPageNumber}}";
+        this._urlListUsersTemplate                 = serverNameWithProtocol + "/api/2.3/sites/{{iwsSiteId}}/users?pageSize={{iwsPageSize}}&pageNumber={{iwsPageNumber}}";
+        this._urlListUsersInGroupTemplate          = serverNameWithProtocol + "/api/2.3/sites/{{iwsSiteId}}/groups/{{iwsGroupId}}/users?pageSize={{iwsPageSize}}&pageNumber={{iwsPageNumber}}"; 
+        this._urlDownloadDatasourceTemplate        = serverNameWithProtocol + "/api/2.3/sites/{{iwsSiteId}}/datasources/{{iwsRepositoryId}}/content";
+        this._urlDownloadWorkbookTemplate          = serverNameWithProtocol + "/api/2.3/sites/{{iwsSiteId}}/workbooks/{{iwsRepositoryId}}/content";
+        this._urlSiteInfoTemplate                  = serverNameWithProtocol + "/api/2.3/sites/{{iwsSiteId}}";
+        this._urlInitiateUploadTemplate            = serverNameWithProtocol + "/api/2.3/sites/{{iwsSiteId}}/fileUploads";
+        this._urlAppendUploadChunkTemplate         = serverNameWithProtocol + "/api/2.3/sites/{{iwsSiteId}}/fileUploads/{{iwsUploadSession}}";
+        this._urlFinalizeUploadDatasourceTemplate  = serverNameWithProtocol + "/api/2.3/sites/{{iwsSiteId}}/datasources?uploadSessionId={{iwsUploadSession}}&datasourceType={{iwsDatasourceType}}&overwrite=true";
+        this._urlFinalizeUploadWorkbookTemplate    = serverNameWithProtocol + "/api/2.3/sites/{{iwsSiteId}}/workbooks?uploadSessionId={{iwsUploadSession}}&workbookType={{iwsWorkbookType}}&overwrite=true";
+        this._urlCreateProjectTemplate             = serverNameWithProtocol + "/api/2.3/sites/{{iwsSiteId}}/projects";
+        this._urlDeleteWorkbookTagTemplate         = serverNameWithProtocol + "/api/2.3/sites/{{iwsSiteId}}/workbooks/{{iwsWorkbookId}}/tags/{{iwsTagText}}";
+        this._urlDeleteDatasourceTagTemplate       = serverNameWithProtocol + "/api/2.3/sites/{{iwsSiteId}}/datasources/{{iwsDatasourceId}}/tags/{{iwsTagText}}";
+        this._urlUpdateWorkbookTemplate            = serverNameWithProtocol + "/api/2.3/sites/{{iwsSiteId}}/workbooks/{{iwsWorkbookId}}";
+        this._urlUpdateDatasourceTemplate          = serverNameWithProtocol + "/api/2.3/sites/{{iwsSiteId}}/datasources/{{iwsDatasourceId}}";
         //Any server version specific things we want to do?
         switch (serverVersion)
         {
@@ -149,10 +161,12 @@ class TableauServerUrls : ITableauServerSiteInfo
         string siteUrlSegment;
         ServerVersion serverVersion;
         //Check for the site specifier.  Infer the server version based on this URL
-        if(urlParts[1] == "t")
+        if (urlParts.Length == 1)
         {
-            siteUrlSegment = urlParts[2];
-            serverVersion = ServerVersion.server8;
+            //The user has just specified the root of the server without a path.
+            //Therefore, use hte default site.
+            siteUrlSegment = ""; //Default site
+            serverVersion = ServerVersion.server9;
         }
         else if((urlParts[1] == "#") && (urlParts[2] == "site"))
         {
@@ -166,7 +180,7 @@ class TableauServerUrls : ITableauServerSiteInfo
         }
         else
         {
-            throw new Exception("Expected /t site splitter in url");
+            throw new Exception("Site URL not recognized as Tableau Server");
         }
          
         return new TableauServerUrls(foundProtocol, serverName, siteUrlSegment, pageSize, serverVersion);
@@ -342,6 +356,40 @@ class TableauServerUrls : ITableauServerSiteInfo
     }
 
     /// <summary>
+    /// URL for updating workbook metadata (e.g. owners, show tabs)
+    /// </summary>
+    /// <param name="session"></param>
+    /// <param name="workbookId"></param>
+    /// <param name="tagText">Tag we want to delete</param>
+    /// <returns></returns>
+    public string Url_UpdateWorkbook(TableauServerSignIn session, string workbookId)
+    {
+        string workingText = _urlUpdateWorkbookTemplate;
+        workingText = workingText.Replace("{{iwsSiteId}}", session.SiteId);
+        workingText = workingText.Replace("{{iwsWorkbookId}}", workbookId);
+        ValidateTemplateReplaceComplete(workingText);
+
+        return workingText;
+    }
+
+    /// <summary>
+    /// URL for updating datasource metadata (e.g. owner id)
+    /// </summary>
+    /// <param name="session"></param>
+    /// <param name="workbookId"></param>
+    /// <param name="tagText">Tag we want to delete</param>
+    /// <returns></returns>
+    public string Url_UpdateDatasource(TableauServerSignIn session, string datasourceId)
+    {
+        string workingText = _urlUpdateDatasourceTemplate;
+        workingText = workingText.Replace("{{iwsSiteId}}", session.SiteId);
+        workingText = workingText.Replace("{{iwsDatasourceId}}", datasourceId);
+        ValidateTemplateReplaceComplete(workingText);
+
+        return workingText;
+    }
+
+    /// <summary>
     /// URL for deleting a tag from a datasource
     /// </summary>
     /// <param name="session"></param>
@@ -368,6 +416,78 @@ class TableauServerUrls : ITableauServerSiteInfo
     public string Url_ProjectsList(TableauServerSignIn session, int pageSize, int pageNumber = 1)
     {
         string workingText = _urlListProjectsTemplate;
+        workingText = workingText.Replace("{{iwsSiteId}}", session.SiteId);
+        workingText = workingText.Replace("{{iwsPageSize}}", pageSize.ToString());
+        workingText = workingText.Replace("{{iwsPageNumber}}", pageNumber.ToString());
+        ValidateTemplateReplaceComplete(workingText);
+
+        return workingText;
+    }
+
+    /// <summary>
+    /// URL for the Subscriptions list
+    /// </summary>
+    /// <param name="session"></param>
+    /// <param name="pageSize"></param>
+    /// <param name="pageNumber"></param>
+    /// <returns></returns>
+    public string Url_SubscriptionsList(TableauServerSignIn session, int pageSize, int pageNumber = 1)
+    {
+        string workingText = _urlListSubscriptionsTemplate;
+        workingText = workingText.Replace("{{iwsSiteId}}", session.SiteId);
+        workingText = workingText.Replace("{{iwsPageSize}}", pageSize.ToString());
+        workingText = workingText.Replace("{{iwsPageNumber}}", pageNumber.ToString());
+        ValidateTemplateReplaceComplete(workingText);
+
+        return workingText;
+    }
+
+    /// <summary>
+    /// URL for the Schedules list
+    /// </summary>
+    /// <param name="session"></param>
+    /// <param name="pageSize"></param>
+    /// <param name="pageNumber"></param>
+    /// <returns></returns>
+    public string Url_SchedulesList(TableauServerSignIn session, int pageSize, int pageNumber = 1)
+    {
+        string workingText = _urlListSchedulesTemplate;
+        workingText = workingText.Replace("{{iwsSiteId}}", session.SiteId);
+        workingText = workingText.Replace("{{iwsPageSize}}", pageSize.ToString());
+        workingText = workingText.Replace("{{iwsPageNumber}}", pageNumber.ToString());
+        ValidateTemplateReplaceComplete(workingText);
+
+        return workingText;
+    }
+
+    /// <summary>
+    /// URL for a list of tasks inside a schedule
+    /// </summary>
+    /// <param name="session"></param>
+    /// <param name="scheduleId"></param>
+    /// <param name="pageSize"></param>
+    /// <param name="pageNumber"></param>
+    /// <returns></returns>
+    public string Url_TasksExtractRefreshesForScheduleList(TableauServerSignIn session, string scheduleId, int pageSize, int pageNumber = 1)
+    {
+        string workingText = _urlListTasksInScheduleTemplate;
+        workingText = workingText.Replace("{{iwsSiteId}}", session.SiteId);
+        workingText = workingText.Replace("{{iwsScheduleId}}", scheduleId);
+        workingText = workingText.Replace("{{iwsPageSize}}", pageSize.ToString());
+        workingText = workingText.Replace("{{iwsPageNumber}}", pageNumber.ToString());
+        ValidateTemplateReplaceComplete(workingText);
+
+        return workingText;
+    }
+
+    /// <summary>
+    /// URL for the Subscriptions list
+    /// </summary>
+    /// <param name="siteUrlSegment"></param>
+    /// <returns></returns>
+    public string Url_ViewsList(TableauServerSignIn session, int pageSize, int pageNumber = 1)
+    {
+        string workingText = _urlListViewsTemplate;
         workingText = workingText.Replace("{{iwsSiteId}}", session.SiteId);
         workingText = workingText.Replace("{{iwsPageSize}}", pageSize.ToString());
         workingText = workingText.Replace("{{iwsPageNumber}}", pageNumber.ToString());

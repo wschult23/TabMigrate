@@ -67,11 +67,12 @@ internal partial class TaskMaster
                 ,commandLine.GetParameterValue(CommandLineParser.Parameter_FromSiteUrl)
                 ,commandLine.GetParameterValue(CommandLineParser.Parameter_FromUserId)
                 ,commandLine.GetParameterValue(CommandLineParser.Parameter_FromUserPassword)
-                ,commandLine.GetParameterValueAsBool(CommandLineParser.Parameter_FromSiteIsSystemAdmin)
+                ,commandLine.GetParameterValueAsBool(CommandLineParser.Parameter_FromSiteIsSystemAdmin) || commandLine.GetParameterValueAsBool(CommandLineParser.Parameter_FromSiteIsSiteAdmin)
                 ,commandLine.GetParameterValue(CommandLineParser.Parameter_ExportSingleProject)
                 ,commandLine.GetParameterValue(CommandLineParser.Parameter_ExportOnlyWithTag)
                 ,commandLine.GetParameterValueAsBool(CommandLineParser.Parameter_RemoveTagAfterExport, false)
-                ,taskOptions
+                ,commandLine.GetParameterValueAsBool(CommandLineParser.Parameter_GenerateInfoFilesForDownloads, false)
+                , taskOptions
                 );
         }
         else if (commandType == CommandLineParser.ParameterValue_Command_Import)
@@ -81,9 +82,10 @@ internal partial class TaskMaster
                 ,commandLine.GetParameterValue(CommandLineParser.Parameter_ToSiteUrl)
                 ,commandLine.GetParameterValue(CommandLineParser.Parameter_ToUserId)
                 ,commandLine.GetParameterValue(CommandLineParser.Parameter_ToUserPassword)
-                ,commandLine.GetParameterValueAsBool(CommandLineParser.Parameter_ToSiteIsSystemAdmin)
+                ,commandLine.GetParameterValueAsBool(CommandLineParser.Parameter_ToSiteIsSystemAdmin) || commandLine.GetParameterValueAsBool(CommandLineParser.Parameter_ToSiteIsSiteAdmin)
                 ,commandLine.GetParameterValueAsBool(CommandLineParser.Parameter_RemapDataserverReferences)
                 ,commandLine.GetParameterValue(CommandLineParser.Parameter_DBCredentialsFile)
+                ,commandLine.GetParameterValueAsBool(CommandLineParser.Parameter_ImportAssignContentOwnership)
                 ,taskOptions
                 );
         }
@@ -99,7 +101,7 @@ internal partial class TaskMaster
     /// <param name="urlToServerSite"></param>
     /// <param name="userName"></param>
     /// <param name="password"></param>
-    /// <param name="isSystemAdmin"></param>
+    /// <param name="isAdmin"></param>
     /// <param name="options"></param>
     /// <returns></returns>
     private static TaskMaster helper_CreateTaskMaster_SiteInventory(
@@ -107,7 +109,7 @@ internal partial class TaskMaster
         string urlToServerSite, 
         string userName, 
         string password,
-        bool isSystemAdmin,
+        bool isAdmin,
         bool generateTwbFile,
         TaskMasterOptions options)
     {
@@ -125,18 +127,21 @@ internal partial class TaskMaster
         options.AddOption(TaskMasterOptions.Option_GetDatasourcesList);
         options.AddOption(TaskMasterOptions.Option_GetWorkbooksList);
         options.AddOption(TaskMasterOptions.Option_GetWorkbooksConnections);
+        options.AddOption(TaskMasterOptions.Option_GetSubscriptionsList);
+        options.AddOption(TaskMasterOptions.Option_GetViewsList);
 
-        //Some features are only accessible to System Admins
-        //NOTE: When the APIs support site-admin getting this information, they will be moved into the more general block above
-        if(isSystemAdmin)
+        //Some features are only accessible to System/Site Admins
+        if (isAdmin)
         {
             options.AddOption(TaskMasterOptions.Option_GetSiteUsers);
             options.AddOption(TaskMasterOptions.Option_GetSiteInfo);
             options.AddOption(TaskMasterOptions.Option_GetGroupsList);
+            options.AddOption(TaskMasterOptions.Option_GetSchedulesList);
+            options.AddOption(TaskMasterOptions.Option_GetExtractTasksList);
         }
 
         //Do we want to create a Tableau Workbook that uses the inventory CSV file?
-        if(generateTwbFile)
+        if (generateTwbFile)
         {
             options.AddOption(TaskMasterOptions.Option_GenerateInventoryTwb);
         }
@@ -170,10 +175,11 @@ internal partial class TaskMaster
         string urlToServerSite,
         string userName,
         string password,
-        bool isSystemAdmin,
+        bool isSiteAdmin,
         string exportSingleProject,
         string exportOnlyTaggedWith,
         bool removeTagAfterExport,
+        bool generateInfoFilesForDownloadedContent,
         TaskMasterOptions options)
     {
         //If we were passed in no existing options, then add them
@@ -208,10 +214,14 @@ internal partial class TaskMaster
             }
         }
 
+        //Do we want add to save additional metadata with each downloaded workbook/datasource?
+        if (generateInfoFilesForDownloadedContent)
+        {
+            options.AddOption(TaskMasterOptions.OptionParameter_GenerateInfoFilesForDownloadedContent);
+        }
 
-
-        //Some features are only accessible to System Admins
-        if (isSystemAdmin)
+        //Some features are only accessible to Site Admins
+        if (isSiteAdmin)
         {
             options.AddOption(TaskMasterOptions.Option_GetSiteUsers);
             options.AddOption(TaskMasterOptions.Option_GetSiteInfo);
@@ -240,6 +250,7 @@ internal partial class TaskMaster
     /// <param name="isSystemAdmin"></param>
     /// <param name="remapDataserverReferences"></param>
     /// <param name="pathDbCredentials"></param>
+    /// <param name="assignContentOwnership">TRUE: Look for metadata files for uploaded content and attempt to reassign its ownership</param>
     /// <param name="options"></param>
     /// <returns></returns>
     private static TaskMaster helper_CreateTaskMaster_SiteImport(
@@ -247,9 +258,10 @@ internal partial class TaskMaster
         string urlToServerSite,
         string userName,
         string password,
-        bool isSystemAdmin,
+        bool isSiteAdmin,
         bool remapDataserverReferences,
         string pathDbCredentials,
+        bool assignContentOwnership,
         TaskMasterOptions options)
     {
         //If we were passed in no existing options, then add them
@@ -266,13 +278,18 @@ internal partial class TaskMaster
         options.AddOption(TaskMasterOptions.Option_UploadWorkbooks);
 
         //Some features are only accessible to System Admins
-        if (isSystemAdmin)
+        if (isSiteAdmin)
         {
             options.AddOption(TaskMasterOptions.Option_UploadCreateNeededProjects);
         }
 
+        if(assignContentOwnership)
+        {
+            options.AddOption(TaskMasterOptions.Option_AssignContentOwnershipAfterPublish);
+        }
+
         //Do we need to remap workbook references to point to the Server/Site we are uploading to
-        if(remapDataserverReferences)
+        if (remapDataserverReferences)
         {
             options.AddOption(TaskMasterOptions.Option_RemapWorkbookReferencesOnUpload);
         }

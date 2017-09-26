@@ -29,6 +29,17 @@ class DownloadWorkbooks : TableauServerSignedInRequestBase
     private readonly IProjectsList _downloadToProjectDirectories;
 
     /// <summary>
+    /// If TRUE a companion XML file will be generated for each downloaded Workbook with additional
+    /// information about it that is useful for uploads
+    /// </summary>
+    private readonly bool _generateInfoFile;
+
+    /// <summary>
+    /// May be NULL.  If not null, this is the list of sites users, so we can look up the user name
+    /// </summary>
+    private readonly KeyedLookup<SiteUser> _siteUserLookup;
+
+    /// <summary>
     /// Constructor
     /// </summary>
     /// <param name="onlineUrls"></param>
@@ -36,18 +47,24 @@ class DownloadWorkbooks : TableauServerSignedInRequestBase
     /// <param name="workbooks"></param>
     /// <param name="localSavePath"></param>
     /// <param name="projectsList"></param>
+    /// <param name="generateInfoFile">TRUE = Generate companion file for each download that contains metadata (e.g. whether "show tabs" is selected, the owner, etc)</param>
+    /// <param name="siteUsersLookup">If not NULL, use to look up the owners name, so we can write it into the InfoFile for the downloaded content</param>
     public DownloadWorkbooks(
         TableauServerUrls onlineUrls, 
         TableauServerSignIn login, 
         IEnumerable<SiteWorkbook> workbooks,
         string localSavePath,
-        IProjectsList projectsList)
+        IProjectsList projectsList,
+        bool generateInfoFile,
+        KeyedLookup<SiteUser> siteUserLookup)
         : base(login)
     {
         _onlineUrls = onlineUrls;
         _workbooks = workbooks;
         _localSavePath = localSavePath;
         _downloadToProjectDirectories = projectsList;
+        _generateInfoFile = generateInfoFile;
+        _siteUserLookup = siteUserLookup;
     }
 
     /// <summary>
@@ -87,10 +104,16 @@ class DownloadWorkbooks : TableauServerSignedInRequestBase
                 var fileDownloadedNoPath = System.IO.Path.GetFileName(fileDownloaded);
                 statusLog.AddStatus("Finished Workbook download " + fileDownloadedNoPath);
 
-                //Add to the list of our downloaded data sources
+                //Add to the list of our downloaded workbooks, and save metadata
                 if (!string.IsNullOrWhiteSpace(fileDownloaded))
                 {
                     downloadedContent.Add(contentInfo);
+
+                    //Generate the metadata file that has additional server provided information about the workbook
+                    if(_generateInfoFile)
+                    {
+                        WorkbookPublishSettings.CreateSettingsFile(contentInfo, fileDownloaded, _siteUserLookup);
+                    }
                 }
                 else
                 {

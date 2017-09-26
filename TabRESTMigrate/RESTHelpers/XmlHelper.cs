@@ -8,6 +8,7 @@ using System.Xml;
 /// </summary>
 internal static class XmlHelper
 {
+    public const string XmlAttribute_Value = "value";
 
     /// <summary>
     /// Return the XML Settings
@@ -80,7 +81,14 @@ internal static class XmlHelper
     {
         var msTable = new NameTable();
         var ns = new XmlNamespaceManager(msTable);
-        ns.AddNamespace(prefix, "http://tableausoftware.com/api");
+        //[2016-05-08] This app has been changed to use the 2.3 version of the Tableau Server REST API.  
+        //             Between 2.0 and 2.3, a change was made to the namespace returned by the APIs.  
+        //             Supporting this change requires change in the XML namespace. Without this, XPATH
+        //             queries on the XML will not return results.
+        //Example (v2.0 REST APIs): <?xml version=\"1.0\" encoding=\"UTF-8\"?> < tsResponse xmlns =\"http://tableausoftware.com/api\" 
+        //Example (v2.3 REST APIs): <?xml version=\"1.0\" encoding=\"UTF-8\"?> < tsResponse xmlns =\"http://tableau.com/api\" 
+        //ns.AddNamespace(prefix, "http://tableausoftware.com/api");
+        ns.AddNamespace(prefix, "http://tableau.com/api");
 
         return ns;
     }
@@ -211,6 +219,32 @@ internal static class XmlHelper
         }
 
         return attribute.Value;
+    }
+
+
+    /// <summary>
+    /// Write a simple name/value pair as an XML element
+    /// </summary>
+    /// <param name="xmlWriter"></param>
+    /// <param name="elementName"></param>
+    /// <param name="value"></param>
+    internal static void WriteValueElement(XmlWriter xmlWriter, string elementName, bool value)
+    {
+        xmlWriter.WriteStartElement(elementName);
+        XmlHelper.WriteBooleanAttribute(xmlWriter, XmlAttribute_Value, value);
+        xmlWriter.WriteEndElement();
+    }
+    /// <summary>
+    /// Write a simple name/value pair as an XML element
+    /// </summary>
+    /// <param name="xmlWriter"></param>
+    /// <param name="elementName"></param>
+    /// <param name="value"></param>
+    internal static void WriteValueElement(XmlWriter xmlWriter, string elementName, string value)
+    {
+        xmlWriter.WriteStartElement(elementName);
+        xmlWriter.WriteAttributeString(XmlAttribute_Value, value);
+        xmlWriter.WriteEndElement();
     }
 
 }

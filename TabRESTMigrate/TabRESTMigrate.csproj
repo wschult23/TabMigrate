@@ -23,7 +23,7 @@
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
     <WebPage>publish.htm</WebPage>
-    <ApplicationRevision>12</ApplicationRevision>
+    <ApplicationRevision>14</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -91,7 +91,16 @@
     <Compile Include="RESTHelpers\FilterTagSet.cs" />
     <Compile Include="RESTHelpers\ServerVersion.cs" />
     <Compile Include="RESTHelpers\ServerProtocol.cs" />
+    <Compile Include="RESTHelpers\DatasourcePublishSettings_statics.cs" />
+    <Compile Include="RESTHelpers\DatasourcePublishSettings.cs" />
+    <Compile Include="RESTHelpers\WorkbooksPublishSettings_statics.cs" />
     <Compile Include="RESTRequests\DownloadGroupsList.cs" />
+    <Compile Include="RESTRequests\DownloadTasksExtractRefreshesList.cs" />
+    <Compile Include="RESTRequests\DownloadSchedulesList.cs" />
+    <Compile Include="RESTRequests\DownloadViewsList.cs" />
+    <Compile Include="RESTRequests\DownloadSubscriptionsList.cs" />
+    <Compile Include="RESTRequests\SendUpdateDatasourceOwner.cs" />
+    <Compile Include="RESTRequests\SendUpdateWorkbookOwner.cs" />
     <Compile Include="RESTRequests\TableauServerSignOut.cs" />
     <Compile Include="RESTRequests\DownloadUsersListInGroup.cs" />
     <Compile Include="RESTRequests\DownloadUsersListBase.cs" />
@@ -99,15 +108,22 @@
     <Compile Include="RESTRequests\DownloadWorkbookConnections.cs" />
     <Compile Include="RESTRequests\SendDeleteDatasourceTag.cs" />
     <Compile Include="RESTRequests\SendDeleteWorkbookTag.cs" />
+    <Compile Include="RESTHelpers\WorkbooksPublishSettings.cs" />
     <Compile Include="ServerData\IEditDataConnectionsSet.cs" />
     <Compile Include="ServerData\IHasSiteItemId.cs" />
     <Compile Include="ServerData\ITagSetInfo.cs" />
     <Compile Include="ServerData\SiteGroup.cs" />
     <Compile Include="ServerData\SiteConnection.cs" />
     <Compile Include="ServerData\KeyedLookup.cs" />
+    <Compile Include="ServerData\SiteTaskExtractRefresh.cs" />
+    <Compile Include="ServerData\SiteSchedule.cs" />
+    <Compile Include="ServerData\SiteSchedule_static.cs" />
+    <Compile Include="ServerData\SiteView.cs" />
+    <Compile Include="ServerData\SiteSubscription.cs" />
     <Compile Include="ServerData\SiteTag.cs" />
     <Compile Include="ServerData\SiteTagsSet.cs" />
     <Compile Include="ServerData\SiteDocumentBase.cs" />
+    <Compile Include="ServerData\SiteUser_statics.cs" />
     <Compile Include="TaskManager\CommandLineParser_static.cs" />
     <Compile Include="TaskManager\CommandLineParser.cs" />
     <Compile Include="FilesLogging\CsvDataGenerator.cs" />

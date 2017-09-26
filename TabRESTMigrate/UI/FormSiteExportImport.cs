@@ -131,7 +131,7 @@ namespace OnlineContentDownloader
             string siteUrl = txtUrlExportFrom.Text;
             string signInUser = txtIdExportFrom.Text;
             string signInPassword = txtPasswordExportFrom.Text;
-            bool isSystemAdmin = chkExportUserIsAdmin.Checked;
+            bool isSiteAdmin = chkExportUserIsAdmin.Checked;
             string exportOnlySingleProject = txtExportSingleProject.Text.Trim();
             string exportOnlyWithTag = txtExportOnlyTagged.Text.Trim();
 
@@ -172,7 +172,7 @@ namespace OnlineContentDownloader
                 siteUrl,
                 signInUser,
                 signInPassword,
-                isSystemAdmin,
+                isSiteAdmin,
                 exportOnlySingleProject,
                 exportOnlyWithTag,
                 chkExportRemoveExportTag.Checked,
@@ -180,6 +180,7 @@ namespace OnlineContentDownloader
                 localPathForErrorsFile,
                 chkExportContentsWithKeepAlive.Checked,
                 chkVerboseLog.Checked,
+                chkGenerateDownloadMetadataFiles.Checked,
                 out commandLineAsText,
                 out commandLineParsed);
 
@@ -203,11 +204,12 @@ namespace OnlineContentDownloader
             string siteUrl = txtUrlImportTo.Text;
             string signInUser = txtIdImportTo.Text;
             string signInPassword = txtPasswordImportTo.Text;
-            bool isSystemAdmin = chkImportIsSystemAdmin.Checked;
+            bool isSiteAdmin = chkImportIsSiteAdmin.Checked;
             string localPathImportFrom = txtSiteImportContentPath.Text;
+            bool remapContentOwnership = chkImportRemapContentOwnership.Checked;
 
             //Check that this contains Workbooks or Data Sources; otherwise it's not a valid path with content
-            if(!TaskMaster.IsValidImportFromDirectory(localPathImportFrom))
+            if (!TaskMaster.IsValidImportFromDirectory(localPathImportFrom))
             {
                 throw new Exception("The import directory specified does not contain datasources/workbooks sub directories. Import aborted.");
             }
@@ -270,12 +272,13 @@ namespace OnlineContentDownloader
                  siteUrl,
                  signInUser,
                  signInPassword,
-                 isSystemAdmin,
+                 isSiteAdmin,
                  chkRemapWorkbookDataserverReferences.Checked,
                  pathDBCredentials,
                  localPathForLogFile,
                  localPathForErrorsFile,
                  localPathForManualStepsFile,
+                 remapContentOwnership,
                  chkVerboseLog.Checked,
                  out commandLineAsText,
                  out commandLineParsed);
@@ -298,7 +301,7 @@ namespace OnlineContentDownloader
             string siteUrl = txtUrlInventoryFrom.Text;
             string signInUser = txtIdInventoryFromUserId.Text;
             string signInPassword = txtPasswordInventoryFrom.Text;
-            bool isSystemAdmin = chkInventoryUserIsSystemAdmin.Checked;
+            bool isSystemAdmin = chkInventoryUserIsAdmin.Checked;
             var nowTime = DateTime.Now;
 
             //----------------------------------------------------------------------
@@ -885,6 +888,9 @@ namespace OnlineContentDownloader
             }
         }
 
+        private void chkImportRemapContentOwnership_CheckedChanged(object sender, EventArgs e)
+        {
 
+        }
     }
 }
