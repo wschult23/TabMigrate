@@ -356,7 +356,7 @@
             this.txtUrlImportTo.Name = "txtUrlImportTo";
             this.txtUrlImportTo.Size = new System.Drawing.Size(611, 22);
             this.txtUrlImportTo.TabIndex = 4;
-            this.txtUrlImportTo.Text = "http://my-tableau-server/#/site/MySite/";
+            this.txtUrlImportTo.Text = "http://ec2-35-158-95-98.eu-central-1.compute.amazonaws.com";
             // 
             // txtIdImportTo
             // 
@@ -367,7 +367,7 @@
             this.txtIdImportTo.Name = "txtIdImportTo";
             this.txtIdImportTo.Size = new System.Drawing.Size(200, 22);
             this.txtIdImportTo.TabIndex = 2;
-            this.txtIdImportTo.Text = "TestUserId";
+            this.txtIdImportTo.Text = "admin";
             // 
             // txtPasswordImportTo
             // 
@@ -379,7 +379,7 @@
             this.txtPasswordImportTo.PasswordChar = '*';
             this.txtPasswordImportTo.Size = new System.Drawing.Size(160, 22);
             this.txtPasswordImportTo.TabIndex = 3;
-            this.txtPasswordImportTo.Text = "pw";
+            this.txtPasswordImportTo.Text = "start1234";
             // 
             // buttonRunAsyncImport
             // 
@@ -488,7 +488,7 @@
             this.txtPasswordExportFrom.PasswordChar = '*';
             this.txtPasswordExportFrom.Size = new System.Drawing.Size(160, 22);
             this.txtPasswordExportFrom.TabIndex = 31;
-            this.txtPasswordExportFrom.Text = "pw";
+            this.txtPasswordExportFrom.Text = "start1234";
             // 
             // txtIdExportFrom
             // 
@@ -499,7 +499,7 @@
             this.txtIdExportFrom.Name = "txtIdExportFrom";
             this.txtIdExportFrom.Size = new System.Drawing.Size(202, 22);
             this.txtIdExportFrom.TabIndex = 30;
-            this.txtIdExportFrom.Text = "testuser@example.com";
+            this.txtIdExportFrom.Text = "admin";
             // 
             // txtUrlExportFrom
             // 
@@ -510,7 +510,7 @@
             this.txtUrlExportFrom.Name = "txtUrlExportFrom";
             this.txtUrlExportFrom.Size = new System.Drawing.Size(452, 22);
             this.txtUrlExportFrom.TabIndex = 32;
-            this.txtUrlExportFrom.Text = "https://10az.online.tableau.com/#/site/my-test-site/projects";
+            this.txtUrlExportFrom.Text = "http://ec2-35-158-95-98.eu-central-1.compute.amazonaws.com";
             // 
             // panelExportSite
             // 

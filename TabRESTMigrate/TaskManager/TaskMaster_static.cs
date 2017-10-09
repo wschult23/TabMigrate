@@ -195,6 +195,7 @@ internal partial class TaskMaster
         options.AddOption(TaskMasterOptions.Option_DownloadIntoProjects);
         options.AddOption(TaskMasterOptions.Option_DownloadDatasources);
         options.AddOption(TaskMasterOptions.Option_DownloadWorkbooks);
+        options.AddOption(TaskMasterOptions.Option_DownloadSubscriptions);
 
         //Export only a single project
         if(!string.IsNullOrWhiteSpace(exportSingleProject))

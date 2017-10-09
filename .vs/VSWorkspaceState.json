@@ -1,0 +1,13 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\TabRESTMigrate",
+    "\\TabRESTMigrate\\RESTHelpers",
+    "\\TabRESTMigrate\\RESTRequests",
+    "\\TabRESTMigrate\\ServerData",
+    "\\TabRESTMigrate\\TaskManager",
+    "\\TabRESTMigrate\\UI"
+  ],
+  "SelectedNode": "\\TabRESTMigrate\\TabRESTMigrate.csproj",
+  "PreviewInSolutionExplorer": false
+}

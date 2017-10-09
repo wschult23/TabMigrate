@@ -220,3 +220,4 @@ abstract class TableauServerSignedInRequestBase : TableauServerRequestBase
     }
 
 }
+    

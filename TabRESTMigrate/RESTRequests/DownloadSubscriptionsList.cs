@@ -18,7 +18,7 @@ class DownloadSubscriptionsList : TableauServerSignedInRequestBase
     /// Subscriptions we've parsed from server results
     /// </summary>
     private List<SiteSubscription> _subscriptions;
-    public IEnumerable<SiteSubscription> Subscriptions
+    public ICollection<SiteSubscription> Subscriptions
     {
         get
         {

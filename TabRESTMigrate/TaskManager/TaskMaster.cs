@@ -972,7 +972,7 @@ internal partial class TaskMaster
         //===================================================================================
         if (taskOptions.IsOptionSet(TaskMasterOptions.Option_GetSubscriptionsList))
         {
-            var subscriptionsList = Execute_DownloadSubscriptionsList(serverLogin);
+            var subscriptionsList = Execute_DownloadSubscriptionsList( serverLogin);
         }
 
         //===================================================================================
@@ -1023,6 +1023,21 @@ internal partial class TaskMaster
                 ,taskOptions.IsOptionSet(TaskMasterOptions.OptionParameter_GenerateInfoFilesForDownloadedContent)
                 ,_downloadedList_Users
                 ); 
+        }
+
+        //===================================================================================
+        //Subscriptions download...
+        //===================================================================================
+        if (taskOptions.IsOptionSet(TaskMasterOptions.Option_DownloadSubscriptions))
+        {
+            Execute_DownloadSubscriptions( serverLogin
+                ,exportToPath 
+                ,projectNameIdMapping 
+                ,exportSingleProject
+                ,taskOptions.GetOptionValue(TaskMasterOptions.OptionParameter_ExportOnlyTaggedWith)
+                ,taskOptions.IsOptionSet(TaskMasterOptions.OptionParameter_RemoveTagFromExportedContent)
+                ,taskOptions.IsOptionSet(TaskMasterOptions.OptionParameter_GenerateInfoFilesForDownloadedContent)
+                ,_downloadedList_Users);
         }
 
 
@@ -1402,6 +1417,93 @@ internal partial class TaskMaster
         //Store it
         _downloadedList_Subscriptions = subscriptions.Subscriptions;
         return subscriptions;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="onlineLogin"></param>
+    /// <param name="exportToPath"></param>
+    /// <param name="projectsList"></param>
+    /// <param name="singleProjectIdFilter"></param>
+    /// <param name="exportOnlyWithThisTag"></param>
+    /// <param name="deleteTagAfterExport"></param>
+    /// <param name="generateInfoFile">TRUE: Each downloaded workbook will get an information file generated that has additional metadata about it</param>
+    /// <param name="siteUsers"> If not NULL, then this will get used to look the user name for each downloaded workbook, and safe it into the info file</param>
+    private void Execute_DownloadSubscriptions(
+        TableauServerSignIn onlineLogin, 
+        string exportToPath, 
+        IProjectsList projectsList,
+        SiteProject singleProjectIdFilter = null,
+        string exportOnlyWithThisTag      = null,
+        bool deleteTagAfterExport         = false,
+        bool generateInfoFile             = false,
+        IEnumerable<SiteUser>   siteUsers = null
+        )
+    {
+        _statusLog.AddStatusHeader("Download Subscriptions");
+        ICollection<SiteSubscription> SubscriptionsList = null;
+        try
+        {
+            //Get the list of Subscriptions
+            var SubscriptionsManager = new DownloadSubscriptionsList(_onlineUrls, onlineLogin);
+            SubscriptionsManager.ExecuteRequest();
+            SubscriptionsList = SubscriptionsManager.Subscriptions;
+        }
+        catch(Exception exGetContentList)
+        {
+            _statusLog.AddError("Error querying for list of Subscriptions, " + exGetContentList.Message.ToString());
+        }
+
+        if(SubscriptionsList == null)
+        {
+            _statusLog.AddError("Aborting Subscriptions download");
+            return;
+        }
+
+        //====================================================================================================
+        //Apply filters to the list of content to see if we need to reduce the set of content to be downloaded
+        //====================================================================================================
+        var SubscriptionPath = Path.Combine(exportToPath, "Subscriptions");
+        FileIOHelper.CreatePathIfNeeded(SubscriptionPath);
+
+        //-----------------------------------------------------------
+        //Download the data sources
+        //-----------------------------------------------------------
+        //If we are going to write out metadata for each download, then create the object that lets us look up the owner of each workbook
+        KeyedLookup<SiteUser> contentOwnerLookup = null;
+        if ((generateInfoFile) && (siteUsers != null))
+        {
+            contentOwnerLookup = new KeyedLookup<SiteUser>(siteUsers, _statusLog);
+        }
+
+        List<SiteSubscription> successfullExportSet = null;
+
+        try
+        {
+            var SubscriptionDownloads = new DownloadSubscriptions(
+                _onlineUrls, 
+                onlineLogin,
+                SubscriptionsList, 
+                SubscriptionPath,
+                projectsList,
+                generateInfoFile,
+                contentOwnerLookup);
+            successfullExportSet = SubscriptionDownloads.ExecuteRequest();
+        }
+        catch (Exception exSubscriptionDownload)
+        {
+            _statusLog.AddError("Error during Subscription download, " + exSubscriptionDownload.ToString());
+        }
+
+        //--------------------------------------------------------------------------------
+        //Do we want to remove tags from successfully downloaded content?
+        //--------------------------------------------------------------------------------
+        if ((successfullExportSet != null) && (deleteTagAfterExport) && (!string.IsNullOrWhiteSpace(exportOnlyWithThisTag)))
+        {
+            //Execute_DeleteTagFromSubscriptions(onlineLogin, successfullExportSet, exportOnlyWithThisTag);
+        }
+
     }
 
     /// <summary>

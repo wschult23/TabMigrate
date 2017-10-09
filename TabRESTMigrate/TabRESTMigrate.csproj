@@ -99,6 +99,7 @@
     <Compile Include="RESTRequests\DownloadSchedulesList.cs" />
     <Compile Include="RESTRequests\DownloadViewsList.cs" />
     <Compile Include="RESTRequests\DownloadSubscriptionsList.cs" />
+    <Compile Include="RESTRequests\DownloadSubscriptions.cs" />
     <Compile Include="RESTRequests\SendUpdateDatasourceOwner.cs" />
     <Compile Include="RESTRequests\SendUpdateWorkbookOwner.cs" />
     <Compile Include="RESTRequests\TableauServerSignOut.cs" />
