@@ -654,7 +654,8 @@ internal partial class TaskMaster
         string exportOnlyWithThisTag      = null,
         bool deleteTagAfterExport         = false,
         bool generateInfoFile             = false,
-        IEnumerable<SiteUser> siteUsers   = null
+        IEnumerable<SiteUser> siteUsers   = null,
+        DownloadSubscriptionsList subscriptions =null
         )
     {
         var onlineUrls = _onlineUrls;
@@ -970,9 +971,10 @@ internal partial class TaskMaster
         //===================================================================================
         //Subscriptions
         //===================================================================================
+        DownloadSubscriptionsList subscriptionsList=null;
         if (taskOptions.IsOptionSet(TaskMasterOptions.Option_GetSubscriptionsList))
         {
-            var subscriptionsList = Execute_DownloadSubscriptionsList( serverLogin);
+            subscriptionsList = Execute_DownloadSubscriptionsList( serverLogin);
         }
 
         //===================================================================================
@@ -994,10 +996,11 @@ internal partial class TaskMaster
         //===================================================================================
         //List of schedules? 
         //===================================================================================
+        IEnumerable<SiteSchedule> schedules;
         if ((taskOptions.IsOptionSet(TaskMasterOptions.Option_GetSchedulesList))
             || (taskOptions.IsOptionSet(TaskMasterOptions.Option_GetExtractTasksList)))
         {
-            var schedules  = Execute_DownloadSchedulesList(serverLogin);
+            schedules  = Execute_DownloadSchedulesList(serverLogin);
 
             //See if we should download the list of extract refresh tasks
             if (taskOptions.IsOptionSet(TaskMasterOptions.Option_GetExtractTasksList))
@@ -1025,7 +1028,7 @@ internal partial class TaskMaster
                 ); 
         }
 
-        //===================================================================================
+ /*       //===================================================================================
         //Subscriptions download...
         //===================================================================================
         if (taskOptions.IsOptionSet(TaskMasterOptions.Option_DownloadSubscriptions))
@@ -1038,7 +1041,7 @@ internal partial class TaskMaster
                 ,taskOptions.IsOptionSet(TaskMasterOptions.OptionParameter_RemoveTagFromExportedContent)
                 ,taskOptions.IsOptionSet(TaskMasterOptions.OptionParameter_GenerateInfoFilesForDownloadedContent)
                 ,_downloadedList_Users);
-        }
+        }*/
 
 
         //===================================================================================
@@ -1055,6 +1058,7 @@ internal partial class TaskMaster
                 ,taskOptions.IsOptionSet(TaskMasterOptions.OptionParameter_RemoveTagFromExportedContent)
                 ,taskOptions.IsOptionSet(TaskMasterOptions.OptionParameter_GenerateInfoFilesForDownloadedContent)
                 ,_downloadedList_Users
+                ,subscriptionsList
                 );
         }
 
