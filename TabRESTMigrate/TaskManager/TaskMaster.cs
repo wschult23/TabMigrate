@@ -722,6 +722,7 @@ internal partial class TaskMaster
         {
             workbookOwnerLookup = new KeyedLookup<SiteUser>(siteUsers, _statusLog);
         }
+
         //Do the downloads......
         try
         {
@@ -733,7 +734,8 @@ internal partial class TaskMaster
                 workbookPath, 
                 projectsList, 
                 generateInfoFile,
-                workbookOwnerLookup);
+                workbookOwnerLookup,
+                subscriptions);
             successfullExportSet = workbookDownloads.ExecuteRequest();
         }
         catch (Exception exWorkbooksDownload)

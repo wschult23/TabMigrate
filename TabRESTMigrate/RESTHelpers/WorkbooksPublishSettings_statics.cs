@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Xml;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.IO;
 
@@ -9,6 +10,9 @@ internal partial class WorkbookPublishSettings
     private const string XmlElement_WorkbookInfo = "WorkbookInfo";
     private const string XmlElement_ShowTabsInWorkbook = "ShowTabsInWorkbook";
     public const string XmlElement_ContentOwner = "OwnerName";
+    public const string XmlElement_Subscription = "Subscription";
+    public const string XmlElement_SubscriptionSchedule = "Schedule";
+    public const string XmlElement_SubscriptionSubject = "Subject";
     public const string WorkbookSettingsSuffix = ".info.xml";
 
     public const string UnknownOwnerName = "**Unknown Owner**"; 
@@ -52,7 +56,7 @@ internal partial class WorkbookPublishSettings
     /// <param name="wb">Information about the workbook we have downloaded</param>
     /// <param name="localWorkbookPath">Local path to the twb/twbx of the workbook</param>
     /// <param name="userLookups">If non-NULL contains the mapping of users/ids so we can look up the owner</param>
-    internal static void CreateSettingsFile(SiteWorkbook wb, string localWorkbookPath, KeyedLookup<SiteUser> userLookups)
+    internal static void CreateSettingsFile(SiteWorkbook wb, string localWorkbookPath, KeyedLookup<SiteUser> userLookups, DownloadSubscriptionsList subscriptionList)
     {
         string contentOwnerName = null; //Start off assuming we have no content owner information
         if(userLookups != null)
@@ -62,15 +66,38 @@ internal partial class WorkbookPublishSettings
 
         var xml = System.Xml.XmlWriter.Create(PathForSettingsFile(localWorkbookPath));
         xml.WriteStartDocument();
+        {
             xml.WriteStartElement(XmlElement_WorkbookInfo);
-            XmlHelper.WriteValueElement(xml, XmlElement_ShowTabsInWorkbook, wb.ShowTabs);
+            {
+                XmlHelper.WriteValueElement(xml, XmlElement_ShowTabsInWorkbook, wb.ShowTabs);
 
                 //If we have an owner name, write it out
                 if (!string.IsNullOrWhiteSpace(contentOwnerName))
                 {
-                  XmlHelper.WriteValueElement(xml, XmlElement_ContentOwner, contentOwnerName);
+                    XmlHelper.WriteValueElement(xml, XmlElement_ContentOwner, contentOwnerName);
                 }
+                foreach (SiteSubscription sub in subscriptionList.Subscriptions.Where(s=>s.ContentId==wb.Id))
+                {
+                    xml.WriteStartElement(XmlElement_Subscription);
+                    XmlHelper.WriteValueElement(xml, XmlElement_SubscriptionSubject, sub.Subject);
+                    XmlHelper.WriteValueElement(xml, XmlElement_SubscriptionSchedule, sub.ScheduleName);
+
+                    string subOwnerName = null; //Start off assuming we have no content owner information
+                    if (userLookups != null)
+                    {
+                        subOwnerName = helper_LookUpOwnerId(wb.OwnerId, userLookups);
+                    }
+                    //If we have an owner name, write it out
+                    if (!string.IsNullOrWhiteSpace(subOwnerName))
+                    {
+                        XmlHelper.WriteValueElement(xml, XmlElement_ContentOwner, subOwnerName);
+                    }
+
+                    xml.WriteEndElement();
+                }
+            }
             xml.WriteEndElement(); //end: WorkbookInfo
+        }
         xml.WriteEndDocument();
         xml.Close();
     }

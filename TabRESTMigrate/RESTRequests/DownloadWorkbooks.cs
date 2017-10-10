@@ -40,6 +40,11 @@ class DownloadWorkbooks : TableauServerSignedInRequestBase
     private readonly KeyedLookup<SiteUser> _siteUserLookup;
 
     /// <summary>
+    /// May be NULL.  If not null, this is the list of sites users, so we can look up the user name
+    /// </summary>
+    private readonly DownloadSubscriptionsList _subscriptionList;
+
+    /// <summary>
     /// Constructor
     /// </summary>
     /// <param name="onlineUrls"></param>
@@ -56,7 +61,8 @@ class DownloadWorkbooks : TableauServerSignedInRequestBase
         string localSavePath,
         IProjectsList projectsList,
         bool generateInfoFile,
-        KeyedLookup<SiteUser> siteUserLookup)
+        KeyedLookup<SiteUser> siteUserLookup,
+        DownloadSubscriptionsList subscribtionList)
         : base(login)
     {
         _onlineUrls = onlineUrls;
@@ -65,6 +71,7 @@ class DownloadWorkbooks : TableauServerSignedInRequestBase
         _downloadToProjectDirectories = projectsList;
         _generateInfoFile = generateInfoFile;
         _siteUserLookup = siteUserLookup;
+        _subscriptionList = subscribtionList;
     }
 
     /// <summary>
@@ -112,7 +119,7 @@ class DownloadWorkbooks : TableauServerSignedInRequestBase
                     //Generate the metadata file that has additional server provided information about the workbook
                     if(_generateInfoFile)
                     {
-                        WorkbookPublishSettings.CreateSettingsFile(contentInfo, fileDownloaded, _siteUserLookup);
+                        WorkbookPublishSettings.CreateSettingsFile(contentInfo, fileDownloaded, _siteUserLookup, _subscriptionList);
                     }
                 }
                 else
